@@ -70,6 +70,16 @@ connected_count() {
     awk 'NF { count++ } END { print count + 0 }'
 }
 
+json_escape() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+status_field() {
+  _key="$1"
+  printf '%s\n' "$2" |
+    awk -F= -v key="$_key" '$1 == key { print substr($0, length(key) + 2); exit }'
+}
+
 print_status() {
   if ! bluetoothctl_available; then
     printf 'available=no\n'
@@ -121,6 +131,39 @@ print_status() {
   printf 'devices=%s\n' "$_devices"
   printf 'status=%s\n' "$_status"
   print_manager_status
+}
+
+print_available() {
+  _status_output="$(print_status)"
+  [ "$(status_field available "$_status_output")" = "yes" ]
+}
+
+print_waybar() {
+  _status_output="$(print_status)"
+  [ "$(status_field available "$_status_output")" = "yes" ] || exit 1
+
+  _powered="$(status_field powered "$_status_output")"
+  _connected="$(status_field connected "$_status_output")"
+  _adapter="$(status_field adapter "$_status_output")"
+  _devices="$(status_field devices "$_status_output")"
+
+  _class="bluetooth-off"
+  _text=""
+  _tooltip="Bluetooth off"
+  if [ "$_powered" = "yes" ]; then
+    _class="bluetooth-on"
+    _tooltip="${_adapter:-Bluetooth}"
+    if [ "$_connected" -gt 0 ] 2>/dev/null; then
+      _class="bluetooth-connected"
+      _text=" $_connected"
+      _tooltip="${_devices:-$_adapter}"
+    fi
+  fi
+
+  printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' \
+    "$(json_escape "$_text")" \
+    "$(json_escape "$_tooltip")" \
+    "$(json_escape "$_class")"
 }
 
 power_state() {
@@ -178,6 +221,12 @@ case "${1:-status}" in
   status)
     print_status
   ;;
+  available)
+    print_available
+  ;;
+  waybar)
+    print_waybar
+  ;;
   enable|on)
     set_power on
   ;;
@@ -195,7 +244,7 @@ case "${1:-status}" in
     open_manager
   ;;
   *)
-    printf 'usage: %s [status|enable|disable|toggle|manager]\n' "${0##*/}" >&2
+    printf 'usage: %s [status|available|waybar|enable|disable|toggle|manager]\n' "${0##*/}" >&2
     exit 64
   ;;
 esac
