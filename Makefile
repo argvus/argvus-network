@@ -5,7 +5,7 @@ RM ?= rm -f
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install uninstall validate release-archive
+.PHONY: help install uninstall validate release-archive clean
 
 help:
 	@echo "Available targets:"
@@ -61,3 +61,6 @@ release-archive:
 
 build:
 	@tools/build-local-package.sh
+
+clean:
+	rm -f packaging/arch/*.zst packaging/arch/*.tar.gz
