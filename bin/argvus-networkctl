@@ -1,0 +1,287 @@
+#!/usr/bin/env sh
+
+set -eu
+
+notify() {
+  command -v notify-send >/dev/null 2>&1 || return 0
+  notify-send "[argvus]:network" "$1" >/dev/null 2>&1 || true
+}
+
+locale_is_pt() {
+  case "${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}" in
+    pt*|PT*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+msg() {
+  if locale_is_pt; then
+    case "$1" in
+      available_no) printf '%s\n' "NetworkManager indisponivel" ;;
+      connected) printf '%s\n' "Conectado" ;;
+      disconnected) printf '%s\n' "Desconectado" ;;
+      disabled) printf '%s\n' "Rede desativada" ;;
+      enabled) printf '%s\n' "Rede ativada" ;;
+      manager_missing) printf '%s\n' "Editor de conexoes nao encontrado" ;;
+      reconnecting) printf '%s\n' "Reconectando" ;;
+      wifi_disabled) printf '%s\n' "Wi-Fi desativado" ;;
+      wifi_enabled) printf '%s\n' "Wi-Fi ativado" ;;
+    esac
+  else
+    case "$1" in
+      available_no) printf '%s\n' "NetworkManager unavailable" ;;
+      connected) printf '%s\n' "Connected" ;;
+      disconnected) printf '%s\n' "Disconnected" ;;
+      disabled) printf '%s\n' "Network disabled" ;;
+      enabled) printf '%s\n' "Network enabled" ;;
+      manager_missing) printf '%s\n' "Connection editor not found" ;;
+      reconnecting) printf '%s\n' "Reconnecting" ;;
+      wifi_disabled) printf '%s\n' "Wi-Fi disabled" ;;
+      wifi_enabled) printf '%s\n' "Wi-Fi enabled" ;;
+    esac
+  fi
+}
+
+nmcli_available() {
+  command -v nmcli >/dev/null 2>&1
+}
+
+nmcli_timeout() {
+  if command -v timeout >/dev/null 2>&1; then
+    timeout 5s nmcli "$@"
+  else
+    nmcli "$@"
+  fi
+}
+
+ip_available() {
+  command -v ip >/dev/null 2>&1
+}
+
+default_iface() {
+  ip_available || return 0
+  ip route show default 2>/dev/null | awk 'NR == 1 { print $5; exit }'
+}
+
+first_connected_iface() {
+  nmcli_available || return 0
+  nmcli_timeout -t -f DEVICE,STATE device status 2>/dev/null |
+    awk -F: '$2 == "connected" && $1 != "lo" { print $1; exit }'
+}
+
+active_iface() {
+  iface="$(default_iface)"
+  if [ -n "$iface" ]; then
+    printf '%s\n' "$iface"
+    return 0
+  fi
+
+  first_connected_iface
+}
+
+iface_type() {
+  iface="$1"
+  [ -n "$iface" ] || return 0
+  nmcli_available || return 0
+  nmcli_timeout -g GENERAL.TYPE device show "$iface" 2>/dev/null | awk 'NR == 1 { print; exit }'
+}
+
+iface_ip() {
+  iface="$1"
+  [ -n "$iface" ] || return 0
+  ip_available || return 0
+  ip -4 addr show "$iface" 2>/dev/null |
+    awk '/inet / { print $2; exit }' |
+    cut -d/ -f1
+}
+
+iface_ssid() {
+  iface="$1"
+  [ -n "$iface" ] || return 0
+
+  if command -v iwgetid >/dev/null 2>&1; then
+    iwgetid -r "$iface" 2>/dev/null || true
+    return 0
+  fi
+
+  nmcli_available || return 0
+  nmcli_timeout -t -f ACTIVE,SSID device wifi list ifname "$iface" 2>/dev/null |
+    awk -F: '$1 == "yes" { print $2; exit }'
+}
+
+net_bytes() {
+  iface="$1"
+  direction="$2"
+  path="/sys/class/net/$iface/statistics/${direction}_bytes"
+  if [ -r "$path" ]; then
+    sed -n '1p' "$path" 2>/dev/null || printf '0\n'
+  else
+    printf '0\n'
+  fi
+}
+
+networking_state() {
+  if nmcli_available; then
+    nmcli_timeout -t networking 2>/dev/null || printf 'unknown\n'
+  else
+    printf 'unknown\n'
+  fi
+}
+
+wifi_state() {
+  if nmcli_available; then
+    nmcli_timeout -t radio wifi 2>/dev/null || printf 'unknown\n'
+  else
+    printf 'unknown\n'
+  fi
+}
+
+print_status() {
+  if ! nmcli_available; then
+    printf 'available=no\n'
+    printf 'networking=unknown\n'
+    printf 'wifi=unknown\n'
+    printf 'iface=\n'
+    printf 'type=\n'
+    printf 'ip=\n'
+    printf 'ssid=\n'
+    printf 'rx=0\n'
+    printf 'tx=0\n'
+    printf 'connected=no\n'
+    printf 'status=unavailable\n'
+    return 0
+  fi
+
+  networking="$(networking_state)"
+  wifi="$(wifi_state)"
+  iface="$(active_iface)"
+  type="$(iface_type "$iface")"
+  ip_addr="$(iface_ip "$iface")"
+  ssid="$(iface_ssid "$iface")"
+  connected=no
+  status=disconnected
+
+  if [ "$networking" = "disabled" ]; then
+    status=disabled
+  elif [ -n "$ip_addr" ]; then
+    connected=yes
+    status=connected
+  fi
+
+  printf 'available=yes\n'
+  printf 'networking=%s\n' "$networking"
+  printf 'wifi=%s\n' "$wifi"
+  printf 'iface=%s\n' "$iface"
+  printf 'type=%s\n' "$type"
+  printf 'ip=%s\n' "$ip_addr"
+  printf 'ssid=%s\n' "$ssid"
+  printf 'rx=%s\n' "$(net_bytes "$iface" rx)"
+  printf 'tx=%s\n' "$(net_bytes "$iface" tx)"
+  printf 'connected=%s\n' "$connected"
+  printf 'status=%s\n' "$status"
+}
+
+set_networking() {
+  target="$1"
+  if ! nmcli_available; then
+    notify "$(msg available_no)"
+    print_status
+    return 0
+  fi
+
+  if nmcli_timeout networking "$target" >/dev/null 2>&1; then
+    if [ "$target" = "on" ]; then
+      notify "$(msg reconnecting)"
+    else
+      notify "$(msg disconnected)"
+    fi
+  else
+    notify "$(msg available_no)"
+  fi
+
+  print_status
+}
+
+set_wifi() {
+  target="$1"
+  if ! nmcli_available; then
+    notify "$(msg available_no)"
+    print_status
+    return 0
+  fi
+
+  if nmcli_timeout radio wifi "$target" >/dev/null 2>&1; then
+    if [ "$target" = "on" ]; then
+      notify "$(msg wifi_enabled)"
+    else
+      notify "$(msg wifi_disabled)"
+    fi
+  else
+    notify "$(msg available_no)"
+  fi
+
+  print_status
+}
+
+toggle_networking() {
+  case "$(networking_state)" in
+    enabled) set_networking off ;;
+    disabled) set_networking on ;;
+    *) print_status ;;
+  esac
+}
+
+toggle_wifi() {
+  case "$(wifi_state)" in
+    enabled) set_wifi off ;;
+    disabled) set_wifi on ;;
+    *) print_status ;;
+  esac
+}
+
+open_manager() {
+  if command -v nm-connection-editor >/dev/null 2>&1; then
+    exec nm-connection-editor
+  fi
+
+  if command -v nmtui >/dev/null 2>&1; then
+    exec nmtui
+  fi
+
+  notify "$(msg manager_missing)"
+}
+
+usage() {
+  printf 'usage: %s [status|toggle|enable|disable|manager|wifi status|wifi toggle|wifi enable|wifi disable]\n' "${0##*/}" >&2
+}
+
+case "${1:-status}" in
+  status)
+    print_status
+    ;;
+  toggle)
+    toggle_networking
+    ;;
+  enable|on)
+    set_networking on
+    ;;
+  disable|off)
+    set_networking off
+    ;;
+  manager|menu)
+    open_manager
+    ;;
+  wifi)
+    case "${2:-status}" in
+      status) printf '%s\n' "$(wifi_state)" ;;
+      toggle) toggle_wifi ;;
+      enable|on) set_wifi on ;;
+      disable|off) set_wifi off ;;
+      *) usage; exit 64 ;;
+    esac
+    ;;
+  *)
+    usage
+    exit 64
+    ;;
+esac

@@ -1,0 +1,18 @@
+# Maintainer: William C. Canin
+pkgname=argvus-network
+pkgver=0.1.0
+pkgrel=2
+pkgdesc="NetworkManager, Wi-Fi and Bluetooth integration for the ARGVUS desktop."
+arch=('any')
+url="https://github.com/argvus/argvus-network"
+license=('GPL-3.0-only')
+depends=('argvus-session' 'bluez' 'bluez-utils' 'iproute2' 'libnotify' 'networkmanager' 'sudo')
+optdepends=('blueman: optional Bluetooth manager and legacy tray applet')
+options=('!debug')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" PREFIX=/usr install
+}
