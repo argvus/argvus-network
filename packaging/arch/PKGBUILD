@@ -1,7 +1,7 @@
 # Maintainer: William C. Canin
 pkgname=argvus-network
 pkgver=0.1.0
-pkgrel=3
+pkgrel=1
 pkgdesc="NetworkManager, Wi-Fi and Bluetooth integration for the ARGVUS desktop."
 arch=('any')
 url="https://github.com/argvus/argvus-network"
