@@ -31,7 +31,6 @@ uninstall:
 	$(RM) "$(DESTDIR)$(PREFIX)/bin/argvus-bluetoothctl"
 	$(RM) "$(DESTDIR)$(PREFIX)/share/argvus/scripts/apps/waybar-netctl.sh"
 	$(RM) "$(DESTDIR)$(PREFIX)/share/argvus/scripts/argvus/bluetooth-control.sh"
-	$(RM) "$(DESTDIR)$(PREFIX)/share/argvus/scripts/argvus/sysinfo/network.sh"
 	$(RM) "$(DESTDIR)$(PREFIX)/share/argvus/network/waybar/argvus-network-modules.jsonc"
 	$(RM) "$(DESTDIR)$(PREFIX)/share/licenses/argvus-network/LICENSE"
 
@@ -50,6 +49,7 @@ validate:
 		config/network/waybar/argvus-network-modules.jsonc
 	@! awk '/"tray"/ { in_tray = 1 } in_tray && /"bluetooth"/ { found = 1 } in_tray && /^  }/ { in_tray = 0 } END { exit found ? 0 : 1 }' \
 		config/network/waybar/argvus-network-modules.jsonc
+	@test ! -e config/scripts/argvus/sysinfo
 	@echo "argvus-network validation ok"
 
 release-archive:
