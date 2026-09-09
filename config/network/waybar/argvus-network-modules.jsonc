@@ -16,7 +16,7 @@
   },
   "network": {
     "format-icons": [
-      "󰌙",
+      "󰤯",
       "󰤟",
       "󰤢",
       "󰤥",
@@ -24,8 +24,8 @@
     ],
     "format": "{icon}",
     "format-wifi": "{icon}",
-    "format-ethernet": "\uf0ac",
-    "format-disconnected": "\uf127",
+    "format-ethernet": "",
+    "format-disconnected": "󰌙",
     "tooltip-format-wifi": "{essid} ({frequency} GHz)\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
     "tooltip-format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
     "tooltip-format-disconnected": "Disconnected",

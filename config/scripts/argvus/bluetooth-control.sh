@@ -148,14 +148,14 @@ print_waybar() {
   _devices="$(status_field devices "$_status_output")"
 
   _class="bluetooth-off"
-  _text=""
+  _text="󰂯"
   _tooltip="Bluetooth off"
   if [ "$_powered" = "yes" ]; then
     _class="bluetooth-on"
     _tooltip="${_adapter:-Bluetooth}"
     if [ "$_connected" -gt 0 ] 2>/dev/null; then
       _class="bluetooth-connected"
-      _text=" $_connected"
+      _text="󰂯 $_connected"
       _tooltip="${_devices:-$_adapter}"
     fi
   fi
