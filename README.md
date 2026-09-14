@@ -36,7 +36,7 @@ Installed compatibility paths:
 The Waybar fragment is installed to:
 
 ```text
-/usr/share/argvus/network/waybar/argvus-network-modules.jsonc
+/usr/share/argvus/network/config/waybar/argvus-network-modules.jsonc
 ```
 
 The Bluetooth module remains in `group/right-2`; Blueman is not auto-started by
