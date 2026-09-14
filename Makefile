@@ -20,18 +20,16 @@ install:
 		"$(DESTDIR)$(PREFIX)/bin/argvus-networkctl"
 	$(INSTALL) -Dm755 bin/argvus-bluetoothctl \
 		"$(DESTDIR)$(PREFIX)/bin/argvus-bluetoothctl"
-	$(INSTALL) -dm755 "$(DESTDIR)$(PREFIX)/share/argvus"
-	cp -a src/. "$(DESTDIR)$(PREFIX)/share/argvus/"
-	find "$(DESTDIR)$(PREFIX)/share/argvus/scripts" -type f -name '*.sh' -exec chmod 755 {} \; 2>/dev/null || true
+	$(INSTALL) -dm755 "$(DESTDIR)$(PREFIX)/share/argvus/network"
+	cp -a src/usr/share/argvus/network/. "$(DESTDIR)$(PREFIX)/share/argvus/network/"
+	find "$(DESTDIR)$(PREFIX)/share/argvus/network/sh" -type f -name '*.sh' -exec chmod 755 {} \; 2>/dev/null || true
 	$(INSTALL) -Dm644 LICENSE \
 		"$(DESTDIR)$(PREFIX)/share/licenses/argvus-network/LICENSE"
 
 uninstall:
 	$(RM) "$(DESTDIR)$(PREFIX)/bin/argvus-networkctl"
 	$(RM) "$(DESTDIR)$(PREFIX)/bin/argvus-bluetoothctl"
-	$(RM) "$(DESTDIR)$(PREFIX)/share/argvus/scripts/apps/waybar-netctl.sh"
-	$(RM) "$(DESTDIR)$(PREFIX)/share/argvus/scripts/argvus/bluetooth-control.sh"
-	$(RM) "$(DESTDIR)$(PREFIX)/share/argvus/network/waybar/argvus-network-modules.jsonc"
+	rm -rf "$(DESTDIR)$(PREFIX)/share/argvus/network"
 	$(RM) "$(DESTDIR)$(PREFIX)/share/licenses/argvus-network/LICENSE"
 
 validate:
@@ -44,11 +42,11 @@ validate:
 	else \
 		echo "shellcheck not found; skipped"; \
 	fi
-	@grep -q '"network"' src/network/waybar/argvus-network-modules.jsonc
+	@grep -q '"network"' src/usr/share/argvus/network/config/waybar/argvus-network-modules.jsonc
 	@awk '/"group\/right-2"/ { in_group = 1 } in_group && /"custom\/bluetooth"/ { found = 1 } in_group && /^  }/ { in_group = 0 } END { exit found ? 0 : 1 }' \
-		src/network/waybar/argvus-network-modules.jsonc
+		src/usr/share/argvus/network/config/waybar/argvus-network-modules.jsonc
 	@! awk '/"tray"/ { in_tray = 1 } in_tray && /"bluetooth"/ { found = 1 } in_tray && /^  }/ { in_tray = 0 } END { exit found ? 0 : 1 }' \
-		src/network/waybar/argvus-network-modules.jsonc
+		src/usr/share/argvus/network/config/waybar/argvus-network-modules.jsonc
 	@test ! -e src/scripts/argvus/sysinfo
 	@echo "argvus-network validation ok"
 

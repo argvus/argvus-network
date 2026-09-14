@@ -35,14 +35,14 @@
     "on-click-right": "argvus-networkctl toggle"
   },
   "custom/bluetooth": {
-    "exec-if": "/usr/share/argvus/scripts/argvus/bluetooth-control.sh available",
-    "exec": "/usr/share/argvus/scripts/argvus/bluetooth-control.sh waybar",
+    "exec-if": "/usr/share/argvus/network/sh/bluetooth-control.sh available",
+    "exec": "/usr/share/argvus/network/sh/bluetooth-control.sh waybar",
     "return-type": "json",
     "format": "{}",
     "hide-empty-text": true,
     "tooltip": true,
-    "on-click": "/usr/share/argvus/scripts/argvus/bluetooth-control.sh toggle",
-    "on-click-right": "/usr/share/argvus/scripts/argvus/bluetooth-control.sh manager",
+    "on-click": "/usr/share/argvus/network/sh/bluetooth-control.sh toggle",
+    "on-click-right": "/usr/share/argvus/network/sh/bluetooth-control.sh manager",
     "interval": 30
   }
 }

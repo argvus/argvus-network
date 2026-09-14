@@ -28,9 +28,9 @@ make DESTDIR=/tmp/argvus-network-dest PREFIX=/usr install
 Installed compatibility paths:
 
 ```text
-/usr/share/argvus/scripts/apps/waybar-netctl.sh
-/usr/share/argvus/scripts/argvus/bluetooth-control.sh
-/usr/share/argvus/scripts/argvus/sysinfo/network.sh
+/usr/share/argvus/network/sh/waybar-netctl.sh
+/usr/share/argvus/network/sh/bluetooth-control.sh
+/usr/share/argvus/widget-telemetry/sh/network.sh
 ```
 
 The Waybar fragment is installed to:
