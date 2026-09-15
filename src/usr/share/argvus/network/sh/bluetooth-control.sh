@@ -1,10 +1,12 @@
 #!/usr/bin/env sh
 
 set -eu
+# shellcheck disable=SC1091
+. /usr/share/argvus/lib/i18n.sh
 
 notify() {
   command -v notify-send >/dev/null 2>&1 || return 0
-  notify-send "[argvus]:bluetooth" "$1" >/dev/null 2>&1 || true
+  notify-send "$(argvus_tr network bluetooth.title)" "$1" >/dev/null 2>&1 || true
 }
 
 print_manager_status() {
@@ -149,10 +151,10 @@ print_waybar() {
 
   _class="bluetooth-off"
   _text="󰂯"
-  _tooltip="Bluetooth off"
+  _tooltip="$(argvus_tr network.bluetooth.off)"
   if [ "$_powered" = "yes" ]; then
     _class="bluetooth-on"
-    _tooltip="${_adapter:-Bluetooth}"
+    _tooltip="${_adapter:-$(argvus_tr network bluetooth.name)}"
     if [ "$_connected" -gt 0 ] 2>/dev/null; then
       _class="bluetooth-connected"
       _text="󰂯 $_connected"
@@ -194,7 +196,7 @@ set_power() {
   _target="$1"
 
   if ! bluetoothctl_available; then
-    notify "bluetoothctl not found"
+    notify "$(argvus_tr network bluetoothctl_missing)"
     print_status
     return 0
   fi
@@ -204,7 +206,7 @@ set_power() {
   if btctl power "$_target" >/dev/null 2>&1; then
     [ "$_target" = "off" ] && stop_optional_blueman
   else
-    notify "Could not turn Bluetooth $_target"
+    notify "$(argvus_tr network.bluetooth.power_failed target="$_target")"
   fi
 
   print_status
@@ -214,7 +216,7 @@ open_manager() {
   if command -v blueman-manager >/dev/null 2>&1; then
     exec blueman-manager
   fi
-  notify "Blueman manager is optional and is not installed"
+  notify "$(argvus_tr network.blueman_missing)"
 }
 
 case "${1:-status}" in
@@ -244,7 +246,7 @@ case "${1:-status}" in
     open_manager
   ;;
   *)
-    printf 'usage: %s [status|available|waybar|enable|disable|toggle|manager]\n' "${0##*/}" >&2
+    printf '%s\n' "$(argvus_tr network.bluetooth_usage command="${0##*/}")" >&2
     exit 64
   ;;
 esac

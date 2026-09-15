@@ -3,6 +3,8 @@
 # shellcheck disable=SC1091
 ARGVUS_BOOTSTRAP="${ARGVUS_BOOTSTRAP:-${ARGVUS_SYSTEM_CONFIG:-/usr/share/argvus}/session/sh/bootstrap.sh}"
 . "$ARGVUS_BOOTSTRAP"
+# shellcheck source=/usr/share/argvus/lib/i18n.sh
+. /usr/share/argvus/lib/i18n.sh
 
 # To use this script, you must create the following file:
 #
@@ -11,23 +13,7 @@ ARGVUS_BOOTSTRAP="${ARGVUS_BOOTSTRAP:-${ARGVUS_SYSTEM_CONFIG:-/usr/share/argvus}
 # EOF
 
 msg() {
-  if locale_is_pt; then
-    case "$1" in
-      no_iface)      echo "Nenhuma interface encontrada" ;;
-      network)       echo "Rede" ;;
-      disconnected)  echo "Desconectado" ;;
-      reconnecting)  echo "Reconectando" ;;
-      state)         echo "Estado" ;;
-    esac
-  else
-    case "$1" in
-      no_iface)      echo "No interface found" ;;
-      network)       echo "Network" ;;
-      disconnected)  echo "Disconnected" ;;
-      reconnecting)  echo "Reconnecting" ;;
-      state)         echo "State" ;;
-    esac
-  fi
+  argvus_tr network "waybar.$1"
 }
 
 IFACE=$(ip route show default 2>/dev/null | awk 'NR==1{print $5}')
@@ -38,7 +24,7 @@ if [ -z "$IFACE" ]; then
 fi
 
 [ -z "$IFACE" ] &&
-  notify-send "[waybar]:netctl.sh" "$(msg no_iface)" &&
+  notify-send "$(msg network)" "$(msg no_iface)" &&
   exit 1
 
 STATE=$(ip link show "$IFACE" 2>/dev/null | awk 'NR==1{print $9}')
@@ -48,7 +34,7 @@ UP)
   if sudo -n ip link set "$IFACE" down; then
     notify-send "$(msg network)" "$(msg disconnected) ($IFACE)"
   else
-    notify-send "[waybar]:netctl.sh" "sudo ip link set $IFACE down failed"
+    notify-send "$(msg network)" "$(argvus_tr network waybar.command_failed command="sudo ip link set $IFACE down")"
     exit 1
   fi
   ;;
@@ -56,11 +42,11 @@ DOWN | UNKNOWN | "")
   if sudo -n ip link set "$IFACE" up; then
     notify-send "$(msg network)" "$(msg reconnecting) $IFACE..."
   else
-    notify-send "[waybar]:netctl.sh" "sudo ip link set $IFACE up failed"
+    notify-send "$(msg network)" "$(argvus_tr network waybar.command_failed command="sudo ip link set $IFACE up")"
     exit 1
   fi
   ;;
 *)
-  notify-send "[waybar]:netctl.sh" "$(msg state): $STATE ($IFACE)"
+  notify-send "$(msg network)" "$(msg state): $STATE ($IFACE)"
   ;;
 esac
