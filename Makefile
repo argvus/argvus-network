@@ -5,7 +5,7 @@ RM ?= rm -f
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install uninstall validate release-archive clean
+.PHONY: help install uninstall validate lint lint-shell release-archive clean
 
 help:
 	@echo "Available targets:"
@@ -25,6 +25,22 @@ install:
 	find "$(DESTDIR)$(PREFIX)/share/argvus/network/sh" -type f -name '*.sh' -exec chmod 755 {} \; 2>/dev/null || true
 	$(INSTALL) -Dm644 LICENSE \
 		"$(DESTDIR)$(PREFIX)/share/licenses/argvus-network/LICENSE"
+
+lint-shell:
+	@for root in tools packaging/arch/common src bin; do \
+		if [ -d "$$root" ]; then \
+			find "$$root" -type f -name '*.sh' -exec shellcheck -e SC1090 -e SC2034 -e SC2154 {} +; \
+		fi; \
+	done
+	@for root in tools packaging/arch/common src bin; do \
+		if [ -d "$$root" ]; then \
+			find "$$root" -type f -name '*.sh' -exec bash -n {} +; \
+		fi; \
+	done
+	@git diff --check
+	@echo "Lint Shell OK"
+
+lint: lint-shell
 
 uninstall:
 	$(RM) "$(DESTDIR)$(PREFIX)/bin/argvus-networkctl"
