@@ -58,7 +58,7 @@ validate:
 	else \
 		echo "shellcheck not found; skipped"; \
 	fi
-	@grep -q '"network"' src/usr/share/argvus/network/config/waybar/argvus-network-modules.jsonc
+	@grep -q '"custom/network"' src/usr/share/argvus/network/config/waybar/argvus-network-modules.jsonc
 	@awk '/"group\/right-2"/ { in_group = 1 } in_group && /"custom\/bluetooth"/ { found = 1 } in_group && /^  }/ { in_group = 0 } END { exit found ? 0 : 1 }' \
 		src/usr/share/argvus/network/config/waybar/argvus-network-modules.jsonc
 	@! awk '/"tray"/ { in_tray = 1 } in_tray && /"bluetooth"/ { found = 1 } in_tray && /^  }/ { in_tray = 0 } END { exit found ? 0 : 1 }' \

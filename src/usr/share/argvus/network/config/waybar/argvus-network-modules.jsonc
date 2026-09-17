@@ -5,7 +5,7 @@
     "orientation": "inherit",
     "spacing": 2,
     "modules": [
-      "network"
+      "custom/network"
     ]
   },
   "group/right-2": {
@@ -14,20 +14,11 @@
       "custom/bluetooth"
     ]
   },
-  "network": {
-    "format-icons": [
-      "󰤯",
-      "󰤟",
-      "󰤢",
-      "󰤥",
-      "󰤨"
-    ],
-    "format": "{icon}",
-    "format-wifi": "{icon}",
-    "format-ethernet": "",
-    "format-disconnected": "󰌙",
-    "tooltip-format-wifi": "{essid} ({frequency} GHz)\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
-    "tooltip-format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
+  "custom/network": {
+    "exec": "/usr/share/argvus/network/sh/waybar-network.sh",
+    "return-type": "json",
+    "format": "{}",
+    "tooltip": true,
     "interval": 10,
     "nospacing": 1,
     "on-click": "argvus-networkctl manager",

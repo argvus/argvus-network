@@ -41,13 +41,14 @@ first_connected_iface() {
 }
 
 active_iface() {
-  iface="$(default_iface)"
-  if [ -n "$iface" ]; then
-    printf '%s\n' "$iface"
+  # NetworkManager's device state is authoritative for whether a connection
+  # is active. A stale kernel default route must not turn disconnected into a
+  # connected status.
+  if nmcli_available; then
+    first_connected_iface
     return 0
   fi
-
-  first_connected_iface
+  default_iface
 }
 
 iface_type() {
@@ -107,6 +108,14 @@ wifi_state() {
   fi
 }
 
+connectivity_state() {
+  if nmcli_available; then
+    nmcli_timeout -t -g CONNECTIVITY general 2>/dev/null || printf 'unknown\n'
+  else
+    printf 'unknown\n'
+  fi
+}
+
 print_status() {
   if ! nmcli_available; then
     printf 'available=no\n'
@@ -119,12 +128,14 @@ print_status() {
     printf 'rx=0\n'
     printf 'tx=0\n'
     printf 'connected=no\n'
+    printf 'connectivity=unknown\n'
     printf 'status=unavailable\n'
     return 0
   fi
 
   networking="$(networking_state)"
   wifi="$(wifi_state)"
+  connectivity="$(connectivity_state)"
   iface="$(active_iface)"
   type="$(iface_type "$iface")"
   ip_addr="$(iface_ip "$iface")"
@@ -134,9 +145,13 @@ print_status() {
 
   if [ "$networking" = "disabled" ]; then
     status=disabled
-  elif [ -n "$ip_addr" ]; then
+  elif [ -n "$iface" ]; then
     connected=yes
-    status=connected
+    case "$connectivity" in
+      full) status=connected ;;
+      limited|portal|none|unknown|'') status=limited ;;
+      *) status=limited ;;
+    esac
   fi
 
   printf 'available=yes\n'
@@ -149,6 +164,7 @@ print_status() {
   printf 'rx=%s\n' "$(net_bytes "$iface" rx)"
   printf 'tx=%s\n' "$(net_bytes "$iface" tx)"
   printf 'connected=%s\n' "$connected"
+  printf 'connectivity=%s\n' "$connectivity"
   printf 'status=%s\n' "$status"
 }
 
