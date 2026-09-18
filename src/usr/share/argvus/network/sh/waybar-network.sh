@@ -21,17 +21,17 @@ type="$(value type)"
 
 case "$status" in
   connected)
-    icon='󰤯'
+    icon='󰱓 '
     title="$(argvus_tr network waybar.connected)"
     class=connected
     ;;
   limited)
-    icon='󰤭'
+    icon='󰍸 '
     title="$(argvus_tr network waybar.limited)"
     class=limited
     ;;
   *)
-    icon='󰌙'
+    icon='󰅛 '
     title="$(argvus_tr network waybar.disconnected)"
     class=disconnected
     ;;
