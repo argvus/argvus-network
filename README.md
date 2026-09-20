@@ -19,10 +19,12 @@ want its manager or the legacy tray applet.
 The full ARGVUS Waybar taskbar layout, including `group/right-2` placement, is
 owned by `argvus-shell`. The patched Waybar package remains `argvus-waybar`.
 
-## Install
+## Build and install
 
 ```sh
-make DESTDIR=/tmp/argvus-network-dest PREFIX=/usr install
+make validate
+make build
+make install
 ```
 
 Installed compatibility paths:
@@ -42,9 +44,15 @@ The Waybar fragment is installed to:
 The Bluetooth module remains in `group/right-2`; Blueman is not auto-started by
 this package.
 
+`make build` creates a deterministic local source archive in `build/artifacts/`
+and a package in `build/dist/`. Release builds use
+`packaging/arch/ci/PKGBUILD`; local builds use
+`packaging/arch/local/PKGBUILD`.
+
 ## Validate
 
 ```sh
 make validate
-makepkg --printsrcinfo
+makepkg -p packaging/arch/ci/PKGBUILD --printsrcinfo
+makepkg -p packaging/arch/local/PKGBUILD --printsrcinfo
 ```

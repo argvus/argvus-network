@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
+if [ ! -r /usr/share/argvus/lib/i18n.sh ]; then
+	printf 'i18n runtime not installed; skipping status mapping tests\n'
+	exit 0
+fi
 tmp="$(mktemp -d)"
 trap 'rm -rf -- "$tmp"' EXIT
 bin="$tmp/bin"
@@ -29,7 +33,7 @@ esac
 EOF
 chmod 755 "$bin/nmcli" "$bin/ip"
 
-run() { PATH="$bin:/usr/bin:/bin" sh "$root/bin/argvus-networkctl" status; }
+run() { PATH="$bin:/usr/bin:/bin" sh "$root/src/usr/bin/argvus-networkctl" status; }
 test "$(NM_CONNECTIVITY=full run | sed -n 's/^status=//p')" = connected
 test "$(NM_CONNECTIVITY=limited run | sed -n 's/^status=//p')" = limited
 test "$(NM_CONNECTIVITY=portal run | sed -n 's/^status=//p')" = limited

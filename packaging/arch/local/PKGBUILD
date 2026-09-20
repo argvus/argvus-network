@@ -9,10 +9,21 @@ license=('GPL-3.0-only')
 depends=('argvus-i18n' 'argvus-session' 'bluez' 'bluez-utils' 'iproute2' 'libnotify' 'networkmanager' 'sudo')
 optdepends=('blueman: optional Bluetooth manager and legacy tray applet')
 options=('!debug')
-source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=('SKIP')
+source=("${pkgname}-${pkgver}.tar.gz")
+sha256sums=()
+
+# shellcheck disable=SC1091
+_functions_file="${startdir:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)}/../common/functions.sh"
+. "$_functions_file"
+
+prepare() {
+	arch_normalize_source_tree
+}
+
+check() {
+	arch_check_network_payload
+}
 
 package() {
-  cd "${srcdir}/${pkgname}-${pkgver}"
-  make DESTDIR="${pkgdir}" PREFIX=/usr install
+	arch_package_network_payload
 }
