@@ -227,6 +227,10 @@ toggle_wifi() {
 }
 
 open_manager() {
+  if command -v argvus-control-center >/dev/null 2>&1; then
+    exec argvus --network-interfaces
+  fi
+
   if command -v nm-connection-editor >/dev/null 2>&1; then
     exec nm-connection-editor
   fi
