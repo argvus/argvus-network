@@ -17,7 +17,6 @@ json_escape() {
 status="$(value status)"
 iface="$(value iface)"
 ssid="$(value ssid)"
-type="$(value type)"
 
 case "$status" in
   connected)

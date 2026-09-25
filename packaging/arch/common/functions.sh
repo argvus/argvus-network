@@ -33,7 +33,7 @@ arch_check_network_payload() {
 	test -x "${source_root}/src/usr/bin/argvus-bluetoothctl"
 	test -f "${source_root}/src/usr/share/argvus/network/config/waybar/argvus-network-modules.jsonc"
 	test -f "${source_root}/src/usr/share/argvus/network/sh/bluetooth-control.sh"
-	test -f "${source_root}/src/usr/share/argvus/network/sh/waybar-network.sh"
+	test -x "${source_root}/src/usr/share/argvus/network/sh/waybar-network.sh"
 	find "${source_root}/src" -type f -name '*.sh' -exec bash -n {} +
 	grep -q '"custom/network"' \
 		"${source_root}/src/usr/share/argvus/network/config/waybar/argvus-network-modules.jsonc"
